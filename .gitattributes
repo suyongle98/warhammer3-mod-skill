@@ -1,0 +1,2 @@
+# Preserve published bytes so SHA256SUMS also verifies GitHub downloads.
+* -text

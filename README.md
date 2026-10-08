@@ -1,0 +1,59 @@
+# 战锤3 MOD AI 技能书 · 通用分享版
+# Warhammer III Modding AI Skill · Portable Edition
+
+**中文优先，标题、介绍与使用说明提供中英双语。**
+
+A Chinese-first, portable knowledge and tooling package for AI-assisted Total War: Warhammer III modding. Titles, introduction and usage guidance are available in both Chinese and English; technical chapters are written in Chinese with original English table names, fields and terminology.
+
+发布 2026-10-08；共 35 个主题分册，已同步后续 DDS、UI、模型诊断和内容清理更新。不依赖作者的机器、私人路径或 AI 客户端。
+
+## 开始使用 / Getting started
+
+1. 解压，保留整个 `warhammer-mod` 文件夹及内部结构。
+2. 人工阅读：打开 `references/00-技能书目录.md` 按主题选择；AI 使用：让它先读 `SKILL.md`、00，再按任务读取相关册。客户端支持技能包时，按该客户端的安装说明放置；本包不自动安装。
+3. 做 MOD 前提供自己的游戏版本、原版导出根和 MOD 源目录，先读 02/05。没有导出资料时先用 RPFM 从自己的游戏导出，不能把作者指纹当作可编辑原版。
+
+可直接发给 AI 的开工要求：
+
+> 先读取这个文件夹里的 SKILL.md 和 references/00-技能书目录.md，按任务路由读需要的册。先核实我提供的游戏版本、原版导出和 MOD 路径，字段对拍当前原版；区分已验证、历史案例和推断。文档尖括号路径需换成我的真实路径，缺软件时说明依赖。
+
+## 随包工具 / Included tools
+
+首次使用先看 [工具清单与准备](工具清单与准备.md)：必需/可选工具、作者下载地址、环境准备顺序，以及每个脚本的依赖。
+
+- `tools/modcheck/check.js`：TSV/loc/引用检查，DB 原版路径必须指定。不能替代 schema 的全部类型/复合键校验或游戏实测。
+- `tools/rpfm-pack/{pack,extract,inspect}.js`：另需兼容 RPFM server；说明在其 README。
+- `scripts/dds-inspect.js`：只读 DDS 头与 SHA-256；不解码像素、不验证压缩载荷或游戏兼容性。
+- `scripts/audit-version.js`：只读指纹对比；只有显式 --snapshot 才写新快照。
+- `scripts/diff-row.ps1`：逐字段比较克隆行；`check-tsv.ps1` 是浅层格式检查；Windows 各配 .bat。
+
+Node 脚本无 npm 依赖；Node 和第三方软件需自行安装。命令示例与配置见 02，验证范围见 `VALIDATION.md`。文档中 `<GAME>` 等是占位记号，不能原样执行。假定环境、缺失原版或跳过检查都不能当作成功。
+
+## 版本与动作案例 / Version and case boundaries
+
+作者参考资料是 WH3 9.0.2 / build 25649450，不承诺未来版本全部兼容。旧字段、表计数和历史游戏实测需按自己的版本复核。
+
+su_dgxl 将四个移动射击槽接站立射击；2026-10-08 用户实测为移动正常、上半身射击姿势不自然。28 册区分移动、腿部步态、持械姿态和发射时序，不把个例写成“必然僵化”。
+
+## 分享范围 / Distribution scope
+
+GitHub 可直接浏览全部 Markdown；下载或克隆后保留目录结构，再让 AI 读取 SKILL.md 和 00 目录。
+
+本包可作为技能书分享给群友；不含个人配置、旧归档、原版游戏资产或案例 MOD 源。工具与教程外链归各作者；需要相关资产时从自己的合法游戏安装或有权使用的 MOD 获取。原版元数据指纹已去掉作者绝对路径。
+
+## English quick start
+
+1. Download the repository as a ZIP or clone it. Keep SKILL.md, references/, scripts/, tools/ and assets/ together. The package does not install itself or require a particular AI client.
+2. Ask your AI to read [SKILL.md](SKILL.md), then [the chapter router](references/00-技能书目录.md). It should load only the chapters relevant to your task.
+3. Provide your own game version, current vanilla export, MOD source directory and required tools. See [environment setup](references/02-环境与工具.md) and [tool preparation](工具清单与准备.md). Replace all angle-bracket path placeholders with your own real paths.
+4. Verify table headers, field types, keys and script APIs against your current vanilla game and schema. The author reference baseline is WH3 9.0.2 / Steam build 25649450, checked on 2026-10-08; it is not a claim about your installed version or a future latest release.
+
+Copy this instruction to your AI:
+
+> Read SKILL.md and references/00-技能书目录.md first, then select the relevant chapters for my task. Confirm my game version, vanilla export and MOD paths before editing. Check fields and keys against my current vanilla data. Distinguish verified facts, historical cases and inference. Replace path placeholders with my real paths and explain any missing tools. Follow my authorization and the permissions of your client.
+
+The 35 Chinese chapters cover DB/TSV, units, characters, abilities, equipment, campaigns, battle Lua, MCT, UI, textures, models, localization and diagnosis. The latest maintenance adds DDS inspection, UI lifecycle guidance and RMV2 deformation diagnosis, and removes the obsolete appendix.
+
+Included Node.js scripts have no npm dependencies; Node.js and third-party programs must be installed separately. modcheck requires current vanilla DB exports via --vanilla; RPFM pack helpers require a compatible RPFM server and configured schema. dds-inspect reads headers and SHA-256 only: it does not decode pixels, validate compressed payloads or prove game compatibility. Lua syntax checking requires Lua 5.1 luac.
+
+No game assets, game table contents, private paths, credentials or third-party executables are included. Author metadata fingerprints are reference snapshots. Static checks do not replace in-game testing; this publication did not repeat game tests or validate newer RPFM interfaces. See [validation scope](VALIDATION.md).
