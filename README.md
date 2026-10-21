@@ -5,7 +5,7 @@
 
 A Chinese-first, portable knowledge and tooling package for AI-assisted Total War: Warhammer III modding. Titles, introduction and usage guidance are available in both Chinese and English; technical chapters are written in Chinese with original English table names, fields and terminology.
 
-发布 2026-10-08；共 35 个主题分册，已同步后续 DDS、UI、模型诊断和内容清理更新。不依赖作者的机器、私人路径或 AI 客户端。
+发布 2026-10-21；共 37 个主题分册，新增「44 · 伪源码整理与机制还原」和「61 · 原生反编译与版本适配」。不依赖作者的机器、私人路径或 AI 客户端。
 
 ## 开始使用 / Getting started
 
@@ -31,9 +31,16 @@ Node 脚本无 npm 依赖；Node 和第三方软件需自行安装。命令示�
 
 ## 版本与动作案例 / Version and case boundaries
 
-作者参考资料是 WH3 9.0.2 / build 25649450，不承诺未来版本全部兼容。旧字段、表计数和历史游戏实测需按自己的版本复核。
+作者资料参考为 WH3 9.0.4.0 / build 25961564（版本与表数同步）；随包自动审计指纹仍为 9.0.2 / build 25649450，尚未接纳新版快照，不承诺未来版本全部兼容。旧字段、表计数和历史游戏实测需按自己的版本复核。
 
 su_dgxl 将四个移动射击槽接站立射击；2026-10-08 用户实测为移动正常、上半身射击姿势不自然。28 册区分移动、腿部步态、持械姿态和发射时序，不把个例写成“必然僵化”。
+
+## 本次新增 / New chapters
+
+- [44 · 伪源码整理与机制还原](references/44-伪源码整理与机制还原.md)：跨 DB、TWUI、CCO、Lua、原生的调用链、状态和副作用。
+- [61 · 原生反编译与版本适配](references/61-原生反编译与版本适配.md)：Ghidra 定向分析、PE/RVA/rel32、签名和对象链、读档生命周期与钩子归属。
+
+原生分析按需另装 Ghidra 及其版本要求的 JDK；本包不附游戏二进制、分析工程、DLL 或原始案例日志。
 
 ## 分享范围 / Distribution scope
 
@@ -46,13 +53,13 @@ GitHub 可直接浏览全部 Markdown；下载或克隆后保留目录结构，�
 1. Download the repository as a ZIP or clone it. Keep SKILL.md, references/, scripts/, tools/ and assets/ together. The package does not install itself or require a particular AI client.
 2. Ask your AI to read [SKILL.md](SKILL.md), then [the chapter router](references/00-技能书目录.md). It should load only the chapters relevant to your task.
 3. Provide your own game version, current vanilla export, MOD source directory and required tools. See [environment setup](references/02-环境与工具.md) and [tool preparation](工具清单与准备.md). Replace all angle-bracket path placeholders with your own real paths.
-4. Verify table headers, field types, keys and script APIs against your current vanilla game and schema. The author reference baseline is WH3 9.0.2 / Steam build 25649450, checked on 2026-10-08; it is not a claim about your installed version or a future latest release.
+4. Verify table headers, field types, keys and script APIs against your current vanilla game and schema. Documentation references WH3 9.0.4.0 / Steam build 25961564 for version and table counts; the bundled audit fingerprint remains 9.0.2 / build 25649450. Neither is a claim about your game; it is not a claim about your installed version or a future latest release.
 
 Copy this instruction to your AI:
 
 > Read SKILL.md and references/00-技能书目录.md first, then select the relevant chapters for my task. Confirm my game version, vanilla export and MOD paths before editing. Check fields and keys against my current vanilla data. Distinguish verified facts, historical cases and inference. Replace path placeholders with my real paths and explain any missing tools. Follow my authorization and the permissions of your client.
 
-The 35 Chinese chapters cover DB/TSV, units, characters, abilities, equipment, campaigns, battle Lua, MCT, UI, textures, models, localization and diagnosis. The latest maintenance adds DDS inspection, UI lifecycle guidance and RMV2 deformation diagnosis, and removes the obsolete appendix.
+The 37 Chinese chapters cover DB/TSV, units, characters, abilities, equipment, campaigns, battle Lua, MCT, UI, textures, models, localization and diagnosis. The latest maintenance adds evidence-based pseudocode reconstruction and targeted native DLL/EXE decompilation, address resolution and version adaptation. Private paths, local environment claims and unpublished case-artifact dependencies have been removed from the new chapters.
 
 Included Node.js scripts have no npm dependencies; Node.js and third-party programs must be installed separately. modcheck requires current vanilla DB exports via --vanilla; RPFM pack helpers require a compatible RPFM server and configured schema. dds-inspect reads headers and SHA-256 only: it does not decode pixels, validate compressed payloads or prove game compatibility. Lua syntax checking requires Lua 5.1 luac.
 

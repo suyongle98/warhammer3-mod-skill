@@ -1,10 +1,10 @@
 # 40 · Lua 战役脚本
 
-> 适用：WH3 ｜ 事实截止：2026-09-08
+> 适用：WH3 ｜ 事实截止：2026-10-10（新档事件及召唤接口局部复核）
 > 来源：`游戏原文件\script\_lib\lib_campaign_manager.lua`（L1411-1452、L2219-2499、L2813、L3667-3706、L6431-6670、L8053、L14820-15010、L15746）；`游戏原文件\script\_lib\lib_mod_loader.lua`；`游戏原文件\db\campaigns_tables\data__.tsv`；教程 18/22
 > 可信度：A ｜ 指纹：`campaigns_tables` 3 行（`wh3_main_chaos` / `wh3_main_combi` / `wh3_main_prologue`）
 > 再生成：重读 `lib_campaign_manager.lua` 的 First Tick 段与 `lib_mod_loader.lua`；表结构变更后重导 `campaigns_tables`
-> 维护核验：2026-10-08；当前版本、来源与本次验证范围见 `05-版本维护与核验.md`。
+> 局部核验：2026-10-10；安装版9.0.3的战役库与Boris召唤脚本已核对，其他历史条目未全量重测；版本范围见 `05-版本维护与核验.md`。
 
 ## 0. 一页速览
 
@@ -75,6 +75,7 @@ first tick      → cm:add_first_tick_callback(function() core:execute_mods(cont
 | 5 | `cm:add_post_first_tick_callback(fn)` | 最后；无论新档/读档 |
 
 - **怎么做**：**注册事件监听器、执行每局都要跑的初始化，一律用 `cm:add_first_tick_callback`**；只在"开新档才做一次"的逻辑（发开局军队、发初始装备）用 `_new`。
+- **新档资格与恢复重试**：开局事件需只服务新档、又要在早期读档后继续重试时，`_new`只写入存档资格，每局回调恢复有资格且未发出的监听；具体两难返回值与防重复见25册§3.3。回调中延后执行的函数不能把当时的 `cm:is_new_game()`当作持久资格。
 - **验收**：存档后读档重进，日志里仍能看到 `add_first_tick_callback` 内的输出；`_new` 内输出**不会**再次出现。
 
 > ⚠️ 坑：用 `cm:add_first_tick_callback_new` 注册监听器 → 读档时回调不触发，监听器从未注册，脚本"存档后失效"（这是本库内 `lua_api.md` 与正文冲突点的实证结论，以本册为准）。
@@ -184,13 +185,13 @@ end)
 ```lua
 local function is_faction_alive(faction_key)
     local faction = cm:get_faction(faction_key)
-    return faction and not faction:is_dead() and not faction:is_null_interface()
+    return faction and not faction:is_null_interface() and not faction:is_dead()
 end
 ```
 
 - **验收**：脚本对已灭亡派系 key 调用时不报错、日志有明确跳过信息。
 
-> ⚠️ 坑：用 `faction:culture()` 判震旦 → 永远 false；震旦属 `subculture`（`wh3_main_sc_cth_cathay`）。带 `sc_` 前缀的是 subculture。
+> ⚠️ 坑：把 `wh3_main_sc_cth_cathay`与 `faction:culture()`比较会失败；该键属于subculture。`culture()`用 `cultures_tables.key`（如 `wh3_main_cth_cathay`），`subculture()`用 `cultures_subcultures_tables.subculture`；按目标范围选方法，不能混用键域。
 
 ## 6. Effect Bundle 动态操作
 
@@ -273,7 +274,7 @@ end)
 | 5 | 科技解锁领主 | — |
 | 6 | 占领某地召唤领主 | 地区码查 `regions_tables` |
 
-- **怎么做**：脚本召唤出的英雄**不会**自带专属名字与不朽属性（教程 22 结论）；用 Effect / 特性补这两项。
+- **怎么做**：按当前原版 `spawn_character_to_pool`参数填写姓名键与不朽布尔值，不能沿用WH2教程断言“脚本召唤必无专名与不朽”。9.0.3 `wh3_main_chaos/wh3_boris.lua`原版调用第10参数为 `true`；接线及适用范围见25册§2.1–§2.2，角色实际名字和不朽仍需游戏验收。
 - **验收**：触发条件满足后目标单位出现在招募池或地图上；读档重进不重复召唤（用 §7 幂等键）。
 - 坐标从目标战役的当前角色/区域接口取得并记录；生成军队前核对地形可用位置，按当前 `cm` 接口检查与游戏实测。
 
