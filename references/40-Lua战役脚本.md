@@ -195,6 +195,8 @@ end
 
 ## 6. Effect Bundle 动态操作
 
+涉及状态、队列、延迟、保存恢复时读 [45](45-Lua离线回归.md)；字符串查找先核对 [46](46-CA字符串接口.md)，标准 Lua 模式及四参数 find 不能直接套用 CA 接口。
+
 ```lua
 -- 1) 用 DB 里预定义的捆绑
 cm:apply_effect_bundle("my_bundle_key", "wh3_main_cth_the_western_provinces", 0)  -- 0 = 永久

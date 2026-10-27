@@ -40,6 +40,18 @@ const DEFAULT_LOC = null;
 const LUAC = process.env.WH3_LUAC || null;
 const { spawnSync } = require('child_process');
 const I32_MAX = 2147483647;
+// Current schema_wh3.ron v0: ingredient + recipe are both is_key=true.
+// Vanilla happens to use every ingredient once here, so row uniqueness alone
+// cannot identify this composite key.
+const SCHEMA_KEYS = {
+  cooking_recipe_required_ingredients_tables: ['ingredient', 'recipe'],
+  // RPFM schema_wh3 v0: building_level + required are both is_key=true;
+  // vanilla only ever has one required per level, so row uniqueness alone
+  // cannot identify the composite key.
+  building_level_required_buildings_tables: ['building_level', 'required'],
+};
+
+
 
 // 磁盘文件名里的占位符：打包时由 pack.js 还原成 `*`
 // （源 mod 的 pack 内路径可能含 Windows 非法字符，如 text/db/*Morgiana_land_units__.loc）
@@ -210,9 +222,20 @@ function checkDbTables(root, tables, vanillaDir) {
       firstColIsKey = vs.size / van.rows.length > 0.9;
     }
 
-    // 主键重复（首列）。首列非唯一键的表（复合键表）里重复是正常的，静默。
+    const schemaKeys = SCHEMA_KEYS[t.table];
+    if (schemaKeys) firstColIsKey = false;
+
+    // Verified composite keys take priority over the first-column heuristic.
     const seen = new Map();
-    if (firstColIsKey) {
+    if (schemaKeys) {
+      const indices = schemaKeys.map(name => t.header.indexOf(name));
+      if (indices.some(index => index < 0)) err('KEY_SCHEMA', r, '复合主键列缺失，请核对当前 schema：' + schemaKeys.join(' + '));
+      else for (let i = 0; i < t.rows.length; i++) {
+        const k = JSON.stringify(indices.map(index => t.rows[i][index]));
+        if (seen.has(k)) err('DUP_KEY', r, `复合主键重复（${schemaKeys.join(' + ')}）：${k}（首见第 ${seen.get(k)} 行）`, i + 3);
+        else seen.set(k, i + 3);
+      }
+    } else if (firstColIsKey) {
       for (let i = 0; i < t.rows.length; i++) {
         const k = t.rows[i][0];
         if (k === '') continue;
@@ -487,8 +510,37 @@ function checkRefs(tables, vanillaDir, refDir, modRoot) {
 // 也在因子表里定义过，上面宽松的「任一表首列」检查会放行，游戏则在 DB 构建时报
 // first_invalid_database_record 并封杀整个 pack。下表列出必须指向特定表主键的列。
 const EXACT_COL_REFS = [
-  { table: 'campaign_group_post_battle_casualty_resources_tables', col: 'resource_factor', target: 'pooled_resource_factor_junctions_tables' },
-  { table: 'campaign_group_post_battle_looted_pooled_resources_tables', col: 'resource_factor', target: 'pooled_resource_factor_junctions_tables' },
+  { table: 'campaign_group_post_battle_casualty_resources_tables', col: 'resource_factor', target: 'pooled_resource_factor_junctions_tables',
+    hint: '该列必须指向 pooled_resource_factor_junctions_tables 的 unique_id，最常见错法是误写成 pooled_resource_factors_tables 的 key' },
+  { table: 'campaign_group_post_battle_looted_pooled_resources_tables', col: 'resource_factor', target: 'pooled_resource_factor_junctions_tables',
+    hint: '该列必须指向 pooled_resource_factor_junctions_tables 的 unique_id，最常见错法是误写成 pooled_resource_factors_tables 的 key' },
+  // ── 效果桥接表（2026-10-22 su_szjq 实机崩溃）：effect 列必须指向 effects_tables.effect
+  // basic/agent/public_order/scripted 的列序都是 effect → ...，而 unit_sets 是 bonus_value_id → effect → unit_set，
+  // 两者形状相近；写反后宽松的「任一表首列」检查会因 bonus_value_id 恰好是另一张表的首列而放行，
+  // 游戏则在 DB 构建时报 first_invalid_database_record 并封杀整个 pack。
+  { table: 'effect_bonus_value_basic_junction_tables', col: 'effect', target: 'effects_tables',
+    hint: '本表列序是 effect → bonus_value_id，必须把效果名写在第 1 列；effect_bonus_value_ids_unit_sets_tables 才是 bonus_value_id → effect → unit_set，极易整行写反' },
+  { table: 'effect_bonus_value_agent_junction_tables', col: 'effect', target: 'effects_tables',
+    hint: '本表列序是 effect → bonus_value_id → agent' },
+  { table: 'effect_bonus_value_ids_unit_sets_tables', col: 'effect', target: 'effects_tables',
+    hint: '本表列序是 bonus_value_id → effect → unit_set，效果名必须在第 2 列' },
+  { table: 'effect_bonus_value_public_order_provider_junctions_tables', col: 'effect', target: 'effects_tables',
+    hint: '本表列序是 bonus_value_id → effect → public_order_provider' },
+  { table: 'effect_bonus_value_scripted_junctions_tables', col: 'effect', target: 'effects_tables',
+    hint: '本表列序是 bonus_value_id → effect → scripted_record' },
+  { table: 'building_effects_junction_tables', col: 'effect', target: 'effects_tables',
+    hint: '建筑效果必须指向 effects_tables.effect' },
+  { table: 'effect_bundles_to_effects_junctions_tables', col: 'effect_key', target: 'effects_tables',
+    hint: '效果包挂载的 effect_key 必须指向 effects_tables.effect' },
+  // ── 其它引用列：指向各自定义表的主键
+  { table: 'effect_bonus_value_ids_unit_sets_tables', col: 'unit_set', target: 'unit_sets_tables',
+    hint: 'unit_set 必须指向 unit_sets_tables 的主键（如 all_units）' },
+  { table: 'effect_bonus_value_agent_junction_tables', col: 'agent', target: 'agents_tables',
+    hint: 'agent 必须指向 agents_tables 的主键' },
+  { table: 'effect_bonus_value_public_order_provider_junctions_tables', col: 'public_order_provider', target: 'public_order_providers_tables',
+    hint: 'public_order_provider 必须指向 public_order_providers_tables 的主键' },
+  { table: 'effect_bonus_value_scripted_junctions_tables', col: 'scripted_record', target: 'scripted_bonus_value_ids_tables',
+    hint: 'scripted_record 必须指向 scripted_bonus_value_ids_tables 的主键' },
 ];
 
 /** 读某张表在某个 db 目录下的全部首列值（定义域） */
@@ -521,8 +573,8 @@ function checkExactRefs(tables, vanillaDir, refDir, modRoot) {
         cells++;
         if (domain.has(v)) continue;
         err('BAD_REF', rel(modRoot, t.path),
-          `第 ${ci + 1} 列 "${rule.col}" 的值 "${v}" 不在 ${rule.target} 的主键里 —— 该列必须指向 ${rule.target} 的 unique_id，` +
-          `最常见错法是误写成 pooled_resource_factors_tables 的 key。游戏会在 DB 构建时报 first_invalid_database_record 并封杀整个 pack`,
+          `第 ${ci + 1} 列 "${rule.col}" 的值 "${v}" 不在 ${rule.target} 的主键里 —— ${rule.hint}。` +
+          `游戏会在 DB 构建时报 first_invalid_database_record 并封杀整个 pack`,
           ri + 3);
       }
     }
@@ -613,7 +665,7 @@ function main() {
   L(`  本地化    : ${locStats.checked} 个文件 / ${locStats.records} 条记录`);
   L(`  其他文件  : ${otherFiles.length} 个（lua/txt/xml）`);
   if (refStats) L(`  引用检查  : 待查值 ${refStats.wanted} 个 → 命中定义 ${refStats.defined} 个，逐格检查 ${refStats.cells} 处（mod 自带资源名 ${refStats.resources} 个）`);
-  if (exactRefCells) L(`  精确引用  : 逐格检查 ${exactRefCells} 处（获取表 factor 列 → 连接表主键）`);
+  if (exactRefCells) L(`  精确引用  : 逐格检查 ${exactRefCells} 处（列级精确引用 → 目标表主键）`);
 
   const groups = [
     ['文件层（编码/换行/空文件）', ['EMPTY', 'BOM', 'CRLF']],

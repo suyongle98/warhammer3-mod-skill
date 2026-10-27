@@ -1,0 +1,5 @@
+{
+  "chrome": "<CHROME_EXECUTABLE>",
+  "playwright": "<PLAYWRIGHT_CORE_MODULE_DIRECTORY>",
+  "python": "<OPTIONAL_PYTHON_EXECUTABLE>"
+}

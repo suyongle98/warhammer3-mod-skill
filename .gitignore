@@ -3,3 +3,6 @@ Thumbs.db
 node_modules/
 _work/
 *.log
+
+# Machine-specific optional preview configuration
+**/runtime.local.json

@@ -5,7 +5,7 @@ description: "Portable, Chinese-first AI skill for Total War: Warhammer III modd
 
 # 战锤3 MOD 技能书（通用分享版） / Warhammer III Modding AI Skill
 
-发布：2026-10-21。作者资料版本参考为 WH3 9.0.4.0 / Steam build 25961564（仅版本与表数同步，随包机器指纹仍为 9.0.2，见 05）；这是参考版本，不代表使用者当前版本，也不代表今后最新版。先读 [使用说明](README.md)，按 [00 目录](references/00-技能书目录.md) §2 选 1–3 册。
+发布：2026-10-27。作者资料版本参考为 WH3 9.0.4.0 / Steam build 25961564（仅版本与表数同步，随包机器指纹仍为 9.0.2，见 05）；这是参考版本，不代表使用者当前版本，也不代表今后最新版。先读 [使用说明](README.md)，按 [00 目录](references/00-技能书目录.md) §2 选 1–3 册。
 
 ## 1. 环境与真源
 
@@ -15,6 +15,8 @@ description: "Portable, Chinese-first AI skill for Total War: Warhammer III modd
 - 兵种：23 → 12；模型/皮肤/缩放：27；骨骼动作、移动射击与姿态：28。
 - DDS 格式/Alpha/Mip/恢复：33；UI 布局/CCO/事件/生命周期：43；RMV2 变形分流：28 §6。
 - 机制还原与伪源码：44；原生 DLL/EXE 定向反编译、签名定位、模型根和版本适配：61。
+- Lua 离线回归：45；CA 字符串接口：46；运行时样本/内存研究：62；MCP 响应与日志证据：63。
+- 汉化审校与显示：51（脚本 scripts/loc-audit.js）；UI 离线预览：43 §6（可选 tools/ui-preview）。
 - 技能法术：21；后端：26；技能书维护：01 → 05。
 - 表头、版本、key、字段类型，以使用者当前原版和 schema 为准。未解码或没有原版先例不能直接推为引擎不支持。
 
@@ -25,7 +27,7 @@ description: "Portable, Chinese-first AI skill for Total War: Warhammer III modd
 | 数字主键 | 从 schema 查 I32/I64 与复合键。I32 范围 −2,147,483,648～2,147,483,647；I64 按其范围处理，不能只看 TSV 推断类型；划 MOD 专属号段 |
 | DB 覆盖 | 文件路径碰撞与行主键合并是两层机制；自定义文件名也须保证优先级。`data__` 是原版常用文件名，不能概括为全库唯一的“替换模式开关”；见 `03` §2 |
 | TSV | 表头、列顺序、表版本从当前导出取；第 2 行 `#表名;版本;pack内路径`；数据行列数一致；UTF-8 无 BOM，保留合法空字段 |
-| 本地化 | 按字段的实际 loc 前缀生成键；新增文本按目标语言提供条目。覆写他人 loc 同路径时保留全部源 key；核对 pack 内真名，非法磁盘字符按 `__STAR__` 等工具约定处理；见 `50` §5.5 |
+| 本地化 | 按字段的实际 loc 前缀生成键；新增文本按目标语言提供条目。覆写他人 loc 同路径时保留全部源 key；核对 pack 内真名，非法磁盘字符按 `__STAR__` 等工具约定处理；见 `50` §5.5；汉化审校见 `51` 与 `scripts/loc-audit.js` |
 | 文案 | 背景描述与效果说明分开；引擎自动列效果的字段不重复罗列数值。纯文案字段按用途填写 |
 | 战役监听器 | 需要读档后继续生效的监听器在 `cm:add_first_tick_callback` 注册；仅开局一次的逻辑用 `_new`；不得把此战役规则套到战斗/MCT 环境 |
 | Lua | UTF-8 无 BOM、Lua 5.1 语法；交付前用工具配置记录（02 册）中的 `luac5.1.exe -p` 检查 |

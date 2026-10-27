@@ -52,6 +52,11 @@ $hdr = $vanLines[0] -split "`t"
 $tab = [char]9
 
 if ($modLines.Count -lt 2 -or $vanLines.Count -lt 2) { Write-Output "invalid TSV: header and metadata required"; exit 1 }
+$vanMeta = [regex]::Match($vanLines[1], '^#([^;]+);(\d+);')
+$modMeta = [regex]::Match($modLines[1], '^#([^;]+);(\d+);')
+if (-not $vanMeta.Success -or -not $modMeta.Success -or $vanMeta.Groups[1].Value -cne $Table -or $modMeta.Groups[1].Value -cne $Table -or $vanMeta.Groups[2].Value -cne $modMeta.Groups[2].Value) {
+    Write-Output 'schema mismatch: table name or version differs'; exit 1
+}
 if ($modLines[0] -cne $vanLines[0]) {
     Write-Output "schema mismatch: column names/order differ; run modcheck before field diff"
     exit 1
@@ -98,7 +103,7 @@ foreach ($mod in $mods) {
     for ($i = 0; $i -lt $hdr.Count; $i++) {
         $a = if ($i -lt $v.Count) { $v[$i] } else { '' }
         $b = if ($i -lt $mod.Count) { $mod[$i] } else { '' }
-        if ($a -ne $b) {
+        if ($a -cne $b) {
             $n++
             Write-Output ("    {0,-36} van = {1,-22} mod = {2}" -f $hdr[$i], $a, $b)
         }
